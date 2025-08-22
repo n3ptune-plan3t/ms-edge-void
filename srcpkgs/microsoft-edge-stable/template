@@ -1,0 +1,61 @@
+pkgname=microsoft-edge-stable
+version=139.0.3405.102
+revision=1
+archs=x86_64
+short_desc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
+long_desc="
+${short_desc}
+
+Optional dependencies:
+- pipewire: WebRTC desktop sharing under Wayland
+- kdialog: for file dialogs in KDE
+- gnome-keyring: for storing passwords in GNOME keyring
+- kwallet5: for storing passwords in KWallet
+"
+maintainer="Nicolas Narvaez <nicomix1006@gmail.com>"
+license="custom"
+homepage="https://www.microsoftedgeinsider.com/en-us/download"
+restricted=yes
+repository=nonfree
+distfiles="https://packages.microsoft.com/yumrepos/edge/Packages/m/microsoft-edge-stable-${version}-1.x86_64.rpm"
+checksum="530ad77be2cf8b2db69710219421157a94b4cc731f3dfdd300c72ee92901f33e"
+depends="alsa-lib cups gtk+3 libdrm libXtst mesa nss"
+hostmakedepends="rpmextract"
+
+do_extract() {
+	mkdir -p "${wrksrc}"
+	rpmextract "${XBPS_SRCDISTDIR}/${pkgname}/microsoft-edge-stable-${version}-1.x86_64.rpm" -C "${wrksrc}"
+}
+
+do_install() {
+	vcopy "${wrksrc}/opt" "/opt"
+	vcopy "${wrksrc}/usr" "/usr"
+
+	chmod 4755 "${DESTDIR}/opt/microsoft/msedge/msedge-sandbox"
+
+	for res in 16 24 32 48 64 128 256; do
+		vinstall "${wrksrc}/opt/microsoft/msedge/product_logo_${res}.png" 0644 "/usr/share/icons/hicolor/${res}x${res}/apps" "microsoft-edge.png"
+	done
+
+	rm -f "${DESTDIR}/opt/microsoft/msedge/product_logo_"*.png
+
+	# User flag aware launcher
+	cat > "${DESTDIR}/usr/bin/microsoft-edge-stable" << EOF
+#!/usr/bin/env sh
+# Launches MS Edge with flags specified in \$XDG_CONFIG_HOME/microsoft-edge-stable-flags.conf
+
+# Make script fail if \`cat\` fails for some reason
+set -e
+
+# Set default value if variable is unset/null
+XDG_CONFIG_HOME="\${XDG_CONFIG_HOME:-\${HOME}/.config}"
+
+# Attempt to read a config file if it exists
+if [ -r "\${XDG_CONFIG_HOME}/microsoft-edge-stable-flags.conf" ]; then
+  EDGE_USER_FLAGS="\$(cat "\$XDG_CONFIG_HOME/microsoft-edge-stable-flags.conf")"
+fi
+
+exec /opt/microsoft/msedge/microsoft-edge \$EDGE_USER_FLAGS "\$@"
+EOF
+	chmod 755 "${DESTDIR}/usr/bin/microsoft-edge-stable"
+}
