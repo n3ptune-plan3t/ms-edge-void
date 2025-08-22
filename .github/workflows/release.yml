@@ -1,0 +1,70 @@
+# .github/workflows/release.yml
+name: Build and Release Void Package
+
+on:
+  # Trigger the workflow on pushes to tags like v1.0, v2.3.4, etc.
+  push:
+    tags:
+      - 'v*'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Void Package 📦
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build the xbps package using Docker
+        run: |
+          # Create a directory to store the final package
+          mkdir -p artifacts
+          
+          # Use the official Void Linux container to build the package.
+          # This mounts your repository into the container's /host directory.
+          docker run --rm --volume "$(pwd):/host" voidlinux/void-glibc /bin/bash -c "
+            set -e  # Exit immediately if a command fails
+            cd /host
+            
+            # Bootstrap the xbps-src environment
+            ./xbps-src binary-bootstrap
+            
+            # Build your package (REPLACE 'my-package' with your package name)
+            ./xbps-src pkg my-package
+            
+            # Copy the built package to the artifacts directory on the runner
+            cp hostdir/binpkgs/*.xbps /host/artifacts/
+          "
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbps-package
+          path: artifacts/*.xbps
+
+  release:
+    name: Create GitHub Release 🚀
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      # This permission is required to create a release and upload assets
+      contents: write
+
+    steps:
+      - name: Download built package from artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: xbps-package
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          # This uses the tag name (e.g., v1.0) for the release title and body
+          # You can customize this further if needed
+          files: "*.xbps"
+        env:
+          # This token is provided by GitHub Actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
