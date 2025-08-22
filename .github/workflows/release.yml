@@ -37,10 +37,13 @@ jobs:
       - name: Copy template
         run: cp -r srcpkgs/microsoft-edge-stable void-packages/srcpkgs/
 
+      - name: Allow restricted packages
+        run: echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
+        working-directory: /home/runner/work/ms-edge-void/ms-edge-void/void-packages
+
       - name: Build package
-        working-directory: void-packages
-             echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
         run: ./xbps-src pkg microsoft-edge-stable
+        working-directory: /home/runner/work/ms-edge-void/ms-edge-void/void-packages
 
       - name: Upload built packages
         uses: actions/upload-artifact@v4
