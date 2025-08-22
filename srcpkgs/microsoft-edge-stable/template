@@ -22,6 +22,10 @@ checksum="530ad77be2cf8b2db69710219421157a94b4cc731f3dfdd300c72ee92901f33e"
 depends="alsa-lib cups gtk+3 libdrm libXtst mesa nss"
 hostmakedepends="rpmextract"
 
+do_fetch() {
+  wget -O "${XBPS_SRCDISTDIR}/${pkgname}/microsoft-edge-stable-${version}-1.x86_64.rpm" "https://path-to-edge-rpm"
+}
+
 do_extract() {
 	mkdir -p "${wrksrc}"
 	rpmextract "${XBPS_SRCDISTDIR}/${pkgname}/microsoft-edge-stable-${version}-1.x86_64.rpm" -C "${wrksrc}"
