@@ -39,6 +39,7 @@ jobs:
 
       - name: Build package
         working-directory: void-packages
+             echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
         run: ./xbps-src pkg microsoft-edge-stable
 
       - name: Upload built packages
