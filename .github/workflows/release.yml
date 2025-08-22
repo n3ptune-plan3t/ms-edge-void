@@ -33,7 +33,7 @@ jobs:
             ./xbps-src binary-bootstrap
             
             # Build your package (REPLACE 'my-package' with your package name)
-            ./xbps-src pkg my-package
+            ./xbps-src pkg microsoft-edge-stable
             
             # Copy the built package to the artifacts directory on the runner
             cp hostdir/binpkgs/*.xbps /host/artifacts/
